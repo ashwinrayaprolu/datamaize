@@ -1,0 +1,42 @@
+{
+    "name": "datamaize",
+    "version": "1.0.0",
+    "keywords": ["util", "functional", "server", "client", "browser"],
+    "author": "Ashwin Rayaprolu<ashwin.rayaprolu@gmail.com>",
+    "description":"A common framework layer for modern web applications",
+    "main": "hello-world-server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified! Configure in package.json\" && exit 1"
+    },
+    "devDependencies": {
+        "grunt": "~0.4.4",
+        "grunt-contrib-jshint": "latest",
+        "jshint-stylish": "latest",
+        "grunt-contrib-uglify": "latest",
+        "grunt-contrib-less": "latest",
+        "grunt-contrib-clean": "latest",
+        "grunt-contrib-copy": "latest",
+        "grunt-contrib-concat": "latest",
+        "grunt-contrib-imagemin": "latest",
+        "grunt-contrib-cssmin": "latest",
+        "grunt-contrib-watch": "latest",
+        "browserify": "~13.0.1",
+        "chai": "~3.5.0",
+        "grunt-mocha-phantomjs": "~3.0.0",
+        "grunt-mocha-test": "~0.12.7",
+        "mocha": "~2.5.3",
+        "sinon": "^1.10.3",
+        "sinon-chai": "~2.8.0"
+    },
+    "license": "MIT",
+    "readmeFilename": "README.md",
+    "dependencies": {
+        "chai": "^1.9.2",
+        "express": "^4.14.0",
+        "js-obfuscator": "^0.1.1",
+        "mocha": "^1.17.1",
+        "request": "^2.73.0"
+    },
+    "contributors": [],
+    "dependencies": {}
+}
