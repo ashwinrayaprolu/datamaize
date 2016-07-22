@@ -36,18 +36,27 @@ module.exports = function (grunt) {
             },
             build_1: {
                 files: {
-                    'dist/js/datamaize.min.js': ['lib/datamaize.js', 'lib/login/datamaize.login.js']
+                    'dist/js/datamaize.min.js': ['src/modules/datamaize.js', 'src/modules/handsontable/datamaize.handsontable.js']
                 }
             },
             dev: {
                 files: {
-                    'dist/js/datamaize.min.js': ['lib/datamaize.js', 'lib/login/datamaize.login.js']
+                    'dist/js/datamaize.min.js': ['src/modules/datamaize.js', 'src/modules/handsontable/datamaize.handsontable.js']
                 }
             },
             production: {
                 files: {
-                    'dist/js/datamaize.min.js': 'lib/**/*.js'
+                    'dist/js/datamaize.min.js': 'src/**/*.js'
                 }
+            }
+        },
+        concat: {
+            options: {
+                separator: ';'
+            },
+            dev: {
+                src: ['src/modules/datamaize.js', 'src/modules/handsontable/datamaize.handsontable.js'],
+                dest: 'dist/js/datamaize.min.js'
             }
         },
         // compile less stylesheets to css -----------------------------------------
@@ -103,16 +112,31 @@ module.exports = function (grunt) {
                 },
                 files: {
                     'dist/js/datamaize.js': [
-                        'lib/**/*.js'
+                        'src/**/*.js'
                     ]
                 }
+            }
+        },
+        copy: {
+            dev: {
+                files: [
+                    // includes files within path
+                    {expand: true, src: ['dist/js/**'], dest: '/Library/WebServer/Documents/datamaize/demo/handsontable/assets/datamaize/', filter: 'isFile'},
+                    {expand: true, src: ['dist/css/**'], dest: '/Library/WebServer/Documents/datamaize/demo/handsontable/assets/datamaize/', filter: 'isFile'}
+                    // includes files within path and its sub-directories
+                    //{expand: true, src: ['path/**'], dest: 'dest/'},
+                    // makes all src relative to cwd
+                    //{expand: true, cwd: 'path/', src: ['**'], dest: 'dest/'},
+                    // flattens results to a single level
+                    //{expand: true, flatten: true, src: ['path/**'], dest: 'dest/', filter: 'isFile'},
+                ]
             }
         }
 
 
     });
-    
-    
+
+
     // ===========================================================================
     // LOAD GRUNT PLUGINS
     // ========================================================
@@ -122,20 +146,22 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-contrib-less');
+    grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-cssmin');
     grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('js-obfuscator');
 
     // ========= // CREATE TASKS =========
 
     // this default task will go through all configuration (dev and production) in each task 
-    grunt.registerTask('default', ['jshint', 'uglify', 'cssmin', 'less']);
+    grunt.registerTask('default', ['jshint', 'uglify', 'less', 'cssmin']);
 
     // this task will only run the dev configuration 
-    grunt.registerTask('dev', ['jshint:dev', 'uglify:dev', 'cssmin:dev', 'less:dev']);
+    grunt.registerTask('dev', ['jshint:dev', 'less:dev', 'cssmin:dev', 'concat:dev','copy:dev']);
 
     // only run production configuration 
-    grunt.registerTask('production', ['jshint:production', 'uglify:production', 'cssmin:production', 'less:production']);
-    
-    
+    grunt.registerTask('production', ['jshint:production', 'uglify:production', 'less:production', 'cssmin:production']);
+
+
 };

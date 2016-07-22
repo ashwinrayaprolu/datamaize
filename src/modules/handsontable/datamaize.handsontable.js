@@ -22,69 +22,71 @@
  * THE SOFTWARE.
  */
 
-/****
- * Few Helper Functions on the top
- * @param {type} obj
- * @param {type} src
- * @returns {unresolved}
- */
-function extend(obj, src) {
-    for (var key in src) {
-        if (src.hasOwnProperty(key)) obj[key] = src[key];
-    }
-    return obj;
-}
-
-
-
-;(function ( name, definition ) {
+(function (name, definition) {
     var theModule = definition,
-        hasDefine = typeof define === 'function',
-        hasExports = typeof module !== 'undefined' && module.exports;
- 
-    if ( hasDefine ) { // AMD Module
+            hasDefine = typeof define === 'function',
+            hasExports = typeof module !== 'undefined' && module.exports;
+
+    if (hasDefine) { // AMD Module
         define(theModule);
-    } else if ( hasExports ) { // Node.js Module
+    } else if (hasExports) { // Node.js Module
         module.exports = theModule;
     } else { // Assign to common namespaces or simply the global object (window)
- 
- 
+
+
         // account for for flat-file/global module extensions
-        var obj = null;
         var namespaces = name.split(".");
         var scope = (this.jQuery || this.ender || this.$ || window || this);
-        for (var i = 0; i < namespaces.length; i++) {
-            var packageName = namespaces[i];
-            if (obj && i == namespaces.length - 1) {
-                obj[packageName] = theModule;
-            } else if (typeof scope[packageName] === "undefined") {
-                scope[packageName] = {};
+        var obj = scope;
+        
+        if (namespaces.length === 1) {
+            scope[namespaces[0]] = theModule;
+        } else {
+
+            for (var i = 0; i < namespaces.length; i++) {
+                var packageName = namespaces[i];
+                if (obj && i === namespaces.length - 1) {
+                    obj[packageName] = theModule;
+                } else if (typeof obj[packageName] === "undefined") {
+                    obj[packageName] = {};
+                    obj = obj[packageName]; 
+                }else{
+                    obj = obj[packageName]; 
+                }
+                
             }
-            obj = scope[packageName];
+            //scopeobj = scope[packageName];
         }
- 
+
     }
-})('datamaize.logincontroller',(function(parent,JQ) {
 
-	var UserId = "", Password = "";
-	var modulus = "", key = "";
+    if (this.Jquery) {
+        $[name] = definition;
+    }
+})('datamaize.plugins.handsontable', (function (parent, $) {
 
-	function login(UserId, Password) {
-		this.UserId = UserId;
-		this.Password = Password;
-	}
+    var UserId = "", Password = "";
+    var modulus = "", key = "";
 
-	function logout() {
-	}
+    function login(UserId, Password) {
+        this.UserId = UserId;
+        this.Password = Password;
+        return "success";
+    }
 
-        
-	// Reveal public pointers to
-	// private functions and properties
-        
-	return extend(parent, {
-		login : login,
-		logout : logout
-	});
-        
+    function logout() {
+    }
 
-})({} ,jQuery));
+
+    // Reveal public pointers to
+    // private functions and properties
+    var module = extend(parent, {
+        login: login,
+        logout: logout
+    });
+    return module;
+
+
+})({}, jQuery));
+
+
