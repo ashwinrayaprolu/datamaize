@@ -1,13 +1,21 @@
 {
-    "name": "datamaize",
-    "version": "1.0.0",
-    "main": "path/to/main.css",
-    "ignore": [
-        ".jshintrc",
-        "**/*.txt"
-    ],
-    "dependencies": {
-    },
-    "devDependencies": {
-    }
+  "name": "datamaize",
+  "version": "1.0.0",
+  "main": "path/to/main.css",
+  "ignore": [
+    ".jshintrc",
+    "**/*.txt"
+  ],
+  "dependencies": {
+    "requirejs": "^2.2.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.5.3",
+    "jquery": "^3.1.0",
+    "sinonjs": "~1.7.3",
+    "jasmine-jquery": "^2.1.1",
+    "jquery-ui": "^1.12.0",
+    "handsontable": "^0.26.0"
+  }
 }

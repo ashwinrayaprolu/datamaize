@@ -3,8 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+var _ = require('underscore')._;
+
+
 module.exports = function (grunt) {
     // Project configuration.
+
+
+
     grunt.initConfig({
         // get the configuration info from package.json
         // ----------------------------
@@ -34,7 +40,7 @@ module.exports = function (grunt) {
             options: {
                 banner: '/*\n <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> \n*/\n'
             },
-            build_1: {
+            build1: {
                 files: {
                     'dist/js/datamaize.min.js': ['src/modules/datamaize.js', 'src/modules/handsontable/datamaize.handsontable.js']
                 }
@@ -61,7 +67,7 @@ module.exports = function (grunt) {
         },
         // compile less stylesheets to css -----------------------------------------
         less: {
-            build_1: {
+            build1: {
                 files: {
                     'stylesheets/css/datamaize.css': 'stylesheets/less/datamaize.less'
                 }
@@ -82,7 +88,7 @@ module.exports = function (grunt) {
             options: {
                 banner: '/*\n <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd") %> \n*/\n'
             },
-            build_1: {
+            build1: {
                 files: {
                     'dist/css/datamaize.min.css': 'stylesheets/css/datamaize.css'
                 }
@@ -131,7 +137,102 @@ module.exports = function (grunt) {
                     //{expand: true, flatten: true, src: ['path/**'], dest: 'dest/', filter: 'isFile'},
                 ]
             }
+        },
+        jasmine: {
+            prod: {
+                // Your project's source files
+                src: 'src/**/*.js',
+                // Your Jasmine spec files
+                specs: 'test/jasmine/**/*.spec.js'
+                        // Your spec helper files
+                        //helpers: 'specs/helpers/*.js'
+            },
+            dev: {
+                src: 'src/**/*.js',
+                options: {
+                    vendor: [
+                        'bower_components/jquery/dist/jquery.js',
+                        'bower_components/jasmine-jquery/lib/jasmine-jquery.js'
+                    ],
+                    specs: 'test/jasmine/**/*.spec.js'
+                }
+            }
+
+        },
+        watch: {
+            files: 'src/**/*.js',
+            tasks: ['jasmine:prod']
+        },
+        simplemocha: {
+            options: {
+                globals: ['expect', 'window', 'jQuery'],
+                timeout: 3000,
+                ignoreLeaks: false,
+                ui: 'bdd',
+                reporter: 'tap'
+            },
+            all: {src: ['test/**/*.js']}
+        },
+        "mocha-chai-sinon": {
+            build: {
+                src: ['./test/mocha/*.js'],
+                options: {
+                    ui: 'bdd',
+                    reporter: 'html'
+                }
+            }
+        },
+        // Mocha
+        mocha: {
+            all: {
+                src: ['test/mocha/*.html']
+            },
+            options: {
+                run: true
+            }
+        },
+        eslint: {
+            options: {
+                configFile: 'conf/eslint.json',
+                rulePaths: ['conf/rules']
+            },
+            all: ['tasks/*.js', 'test/mocha/*.js']
+        },
+        connect: {
+            server: {
+                options: {
+                    port: 8000,
+                    base: '.'
+                }
+            }
+        },
+        karma: {
+            options: {
+                configFile: 'karma.conf.js',
+                port: 9999,
+                browsers: ['Chrome', 'Firefox']
+            },
+            
+            unit: {
+                background: true,
+                singleRun: false
+            },
+            continuous: {
+                singleRun: true,
+                browsers: ['PhantomJS']
+            },
+            dev: {
+                reporters: 'dots'
+            }
         }
+
+
+
+
+
+
+
+
 
 
     });
@@ -151,6 +252,18 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('js-obfuscator');
+    //grunt.loadNpmTasks('grunt-jasmine-runner');
+    grunt.loadNpmTasks('grunt-contrib-jasmine');
+    //grunt.loadNpmTasks('grunt-simple-mocha');
+    //grunt.loadNpmTasks("grunt-mocha-chai-sinon");
+    grunt.loadNpmTasks('grunt-contrib-requirejs');
+    // Load grunt mocha task
+    grunt.loadNpmTasks('grunt-mocha');
+    grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-eslint');
+    grunt.loadNpmTasks('grunt-contrib-qunit');
+    grunt.loadNpmTasks('grunt-karma')
+    //grunt.loadTasks('tasks');
 
     // ========= // CREATE TASKS =========
 
@@ -158,10 +271,21 @@ module.exports = function (grunt) {
     grunt.registerTask('default', ['jshint', 'uglify', 'less', 'cssmin']);
 
     // this task will only run the dev configuration 
-    grunt.registerTask('dev', ['jshint:dev', 'less:dev', 'cssmin:dev', 'concat:dev','copy:dev']);
+    grunt.registerTask('dev', ['jshint:dev', 'less:dev', 'cssmin:dev', 'concat:dev', 'copy:dev']);
 
     // only run production configuration 
     grunt.registerTask('production', ['jshint:production', 'uglify:production', 'less:production', 'cssmin:production']);
+
+
+    grunt.registerTask('testmocha1', 'Run Mocha tests.', function () {
+        // If not --test option is specified, run all tests.
+        var test_case = grunt.option('test') || '**/*';
+        grunt.log.write('Test Case: ' + test_case);
+
+        grunt.config.set('mocha.browser', ['test/mocha/' + test_case + '.html']);
+        grunt.task.run('mocha');
+    });
+
 
 
 };

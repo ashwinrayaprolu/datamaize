@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>hot-wrapper</title>
+        <link rel="stylesheet" href="../bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css"/>
+        <script type="text/javascript"  src="../bower_components/jquery/dist/jquery.min.js"></script>
+        <script type="text/javascript"  src="../bower_components/jquery-ui/jquery-ui.min.js"></script>
+
+        <script src="../bower_components/handsontable/dist/handsontable.full.min.js"></script>
+        <link type="text/css" rel="stylesheet"
+              href="../bower_components/handsontable/dist/handsontable.min.css"/>
+
+        <style>
+
+
+            #progressbar .ui-progressbar-value {
+                background-color: #ccc;
+                width:80%;
+            }
+        </style>
+
+        <script type="text/javascript">
+            var
+                    $$ = function (id) {
+                        return document.getElementById(id);
+                    },
+                    load = $$('load');
+            var hotData;
+            $("#progressbar").hide();
+            $("#progressbar").progressbar({
+                value: false
+            });
+
+            var loadingData = false;
+            var progressbar = $("#progressbar"),
+                    progressbarValue = progressbar.find(".ui-progressbar-value");
+
+            function getDocHeight() {
+                var D = document;
+                return Math.max(
+                        D.body.scrollHeight, D.documentElement.scrollHeight,
+                        D.body.offsetHeight, D.documentElement.offsetHeight,
+                        D.body.clientHeight, D.documentElement.clientHeight
+                        );
+            }
+
+
+            function getDocWidth() {
+                var D = document;
+                return Math.max(
+                        D.body.scrollWidth, D.documentElement.scrollWidth,
+                        D.body.offsetWidth, D.documentElement.offsetWidth,
+                        D.body.clientWidth, D.documentElement.clientWidth
+                        );
+            }
+
+
+            document.addEventListener("DOMContentLoaded", function () {
+
+                // mock service for getting data
+                var fetchData = function (n) {
+                    if (loadingData == true) {
+                        return null;
+                    }
+                    loadingData = true;
+                    progressbarValue.css({
+                        "background": '#' + Math.floor(Math.random() * 16777215).toString(16)
+                    });
+
+                    $("#progressbar").fadeIn();
+
+                    // 1) create the jQuery Deferred object that will be used
+                    var deferred = $.Deferred();
+                    setTimeout(function () {
+                        //console.log("Creating rows:"+n);
+                        var data = Handsontable.helper.createSpreadsheetData(n, 8);
+                        // 3.1) RESOLVE the DEFERRED (this will trigger all the done()...)
+                        deferred.resolve(data);
+                        loadingData = false;
+                        $("#progressbar").fadeOut();
+
+                        // 3.2) REJECT the DEFERRED (this will trigger all the fail()...)
+                        //deferred.reject("HTTP error: " + xhr.status);  
+
+                    }, 3000);
+
+
+                    // 2) return the promise of this deferred
+                    return deferred.promise();
+                };
+
+                // variables
+                var example = document.getElementById('example1');
+                var hot;
+                var dataPromise = fetchData(100);
+
+                // register a function to get called when the data is resolved
+                dataPromise.done(function (data) {
+                    hotData = data;
+                    // initialize HOT
+                    hot = new Handsontable(example, {
+                        data: hotData,
+                        rowHeaders: true,
+                        colHeaders: true,
+                        height: function () {
+                            return getDocHeight() - 30;
+                        },
+                        width: function () {
+                            // console.log(tableId+" parent width:
+                            // "+$('#'+tableId).parent().innerWidth()-20);
+                            //return $('#'+tableId).parent().innerWidth()-20;
+                            return getDocWidth() - 20;
+                            // return 700;
+                        },
+                        afterScrollVertically: compute_window,
+                        beforeKeyDown: checkForMoreRows
+                    });
+
+
+                    Handsontable.Dom.addEvent(load, 'click', function () {
+                        hot.clear();
+                        //data = fetchData(20);
+                        //hot.render();
+
+                        var dataNewPromise = fetchData(20);
+
+                        dataNewPromise.done(function (incoming) {
+                            hotData = incoming;
+                            //hot.render();
+                            hot.loadData(hotData);
+                            hot.selectCell(1, 1);
+                        });
+
+                        //
+                    });
+
+
+                });
+
+                // register the failure function
+                dataPromise.fail(function (ex) {
+                    alert("oops, some problem occured: " + ex);
+                });
+
+
+                // load data and render
+                var loadMoreData = function (n) {
+                    // call data service
+                    //var incoming = fetchData(n);
+
+                    var dataNewPromise = fetchData(n);
+                    if (dataNewPromise == null) {
+                        return;
+                    }
+
+                    dataNewPromise.done(function (incoming) {
+                        incoming.forEach(function (d) {
+                            hotData.push(d);
+                        });
+                        hot.render();
+                        var selection = hot.getSelected();
+                        if (typeof selection != "undefined") {
+                            if (selection[0] > hot.rowOffset() + 10) {
+                                hot.selectCell(selection[0], selection[1]);
+                            } else {
+                                hot.selectCell(hot.rowOffset() + 10, 1);
+                            }
+
+                        } else {
+                            hot.selectCell(hot.rowOffset() + 10, 1);
+                        }
+                    });
+
+                };
+
+                var checkForMoreRows = function (e) {
+                    var visibleRows = hot.countVisibleRows();
+                    var selection = hot.getSelected();
+                    var keyCodes = Handsontable.helper.KEY_CODES;
+                    switch (e.keyCode) {
+                        //each of the 4 arrow key codes
+                        case keyCodes.ARROW_DOWN:
+                            //console.log(selection);
+                            //hot.selectCell(selection[0], selection[1]);
+                            var threshold = 15;
+                            if (hot.isEmptyRow(selection[0] + threshold)) {
+                                loadMoreData(visibleRows * 3);
+                            }
+
+                            break;
+
+                    }
+                };
+
+                var compute_window = function (e) {
+                    var rowCount = hot.countRows();
+                    var rowOffset = hot.rowOffset();
+                    var visibleRows = hot.countVisibleRows();
+
+                    console.log("rowCount :" + rowCount);
+                    console.log("rowOffset :" + rowOffset);
+                    console.log("visibleRows :" + visibleRows);
+                    var currSettings = hot.getSettings();
+                    var currHeight = 0;
+                    if (typeof currSettings.height == "function") {
+                        currHeight = currSettings.height.call(hot);
+                        var rowHeight = currHeight / visibleRows;
+
+                    }
+
+                    var lastRow = rowOffset + (visibleRows * 1);
+                    var lastVisibleRow = rowOffset + visibleRows + (visibleRows / 2);
+                    var threshold = 15;
+
+                    if (lastVisibleRow > (rowCount - threshold)) {
+                        loadMoreData(visibleRows * 3);
+                    }
+                };
+
+
+
+
+            });
+
+
+
+
+
+        </script>
+
+        <script src="/datamaize/demo/handsontable/assets/datamaize/dist/js/datamaize.min.js"></script>        
+
+    </head>
+    <body>
+        <button>load more data</button>
+        <button id="load">load new data</button>
+        <div id="progressbar" ></div>
+
+        <div id="example1" class="hot handsontable htRowHeaders htColumnHeaders"></div>
+
+    </body>
+
+
+
+</html>
