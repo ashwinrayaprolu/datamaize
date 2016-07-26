@@ -26,7 +26,7 @@ module.exports = function (grunt) {
             },
             // when this task is run, lint the Gruntfile and all js files in src
             build: ['Gruntfile.js', 'src/**/*.js'],
-            dev: ['Gruntfile.js', 'src/**/*.js'],
+            dev: ['Gruntfile.js', 'src/modules/**/*.js'],
             production: ['Gruntfile.js', 'src/**/*.js']
         },
         // remove all previous browserified builds
@@ -210,7 +210,7 @@ module.exports = function (grunt) {
             options: {
                 configFile: 'karma.conf.js',
                 port: 9999,
-                browsers: ['Chrome', 'Firefox']
+                browsers: ['Chrome', 'Firefox','PhantomJS']
             },
             
             unit: {
@@ -218,8 +218,8 @@ module.exports = function (grunt) {
                 singleRun: false
             },
             continuous: {
-                singleRun: true,
-                browsers: ['PhantomJS']
+                singleRun: true
+                //browsers: ['PhantomJS']
             },
             dev: {
                 reporters: 'dots'
@@ -262,7 +262,7 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-connect');
     grunt.loadNpmTasks('grunt-eslint');
     grunt.loadNpmTasks('grunt-contrib-qunit');
-    grunt.loadNpmTasks('grunt-karma')
+    grunt.loadNpmTasks('grunt-karma');
     //grunt.loadTasks('tasks');
 
     // ========= // CREATE TASKS =========

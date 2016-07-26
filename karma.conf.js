@@ -39,6 +39,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+        {pattern: 'node_modules/requirejs/require.js', included: true},
         {pattern: 'src/karma/*.js', included: true},
         {pattern: 'test/karma/*.htm', served: true, included: true},
         {pattern: 'test/karma/*.js', included: true}
