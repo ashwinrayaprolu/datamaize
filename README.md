@@ -1,11 +1,12 @@
 # datamaize
-A common framework layer for modern web applications
+A modular component layer for all modern web applications which includes below components
 
 ##Notable Features
  - Includes support for modern grids
  - Includes support for Charts/Graphs
  - Includes support for Tree Menu
  - Includes support for file browser
+ - Includes support for Portlets
  - Includes support for reconciliation
 
 
@@ -27,3 +28,51 @@ IE9+, Modern Browsers
 <script src="../dist/js/datamaize.min.js"></script>
 
     ```
+
+##Example Usage
+
+ - Using Handsontable Plugin
+
+ __Live Grid support?__
+
+ - With the handsontable plugin Live Scrolling is supported by default
+
+
+ ```javascript
+   
+ $(document).ready(function () {
+                $.datamaize.plugins.handsontable.init("example1", {
+                    dataSource: function (offSet, pageNumber, rowsPerPage, numberOfRowsToLoad) {
+                        return  $.ajax({
+                            url: "/data",
+                            method: "POST",
+                            data: {numberOfRowsToLoad: numberOfRowsToLoad, offSet: offSet},
+                            dataType: "json",
+                            success: function (response) {
+                            },
+                            error: function (response) {
+                                console.log("Error")
+                            }
+                        });
+
+
+                    },
+                    rowHeaders: true,
+                    colHeaders: true
+                });
+
+            });
+ 
+    ```
+
+ - Example is located in example folder
+ - run npm install
+ - run bower install
+ - run node app.js
+ - Open browser http://localhost:4730/example/hot-wrapper.html
+
+##Contributors
+ [Ashwin Rayaprolu](https://github.com/ashwinrayaprolu1984)
+
+##License
+ Copyright (c) 2012 Ashwin Rayaprolu Licensed under the MIT license.

@@ -81,7 +81,9 @@
             totalRows: undefined,
             pageNumber: 0,
             loadingData: false,
-            initialized: false
+            initialized: false,
+            loadThreshold: 20,
+            loadBufferToVisibleRows: 3
 
         }
     };
@@ -89,7 +91,8 @@
 
     function _beforeKeyDown(e) {
         var hot = this;
-        //var hotId = this.container.parentNode.id;
+        var hotId = this.container.parentNode.id;
+        var rowCount = hot.countRows();
         var visibleRows = hot.countVisibleRows();
         var selection = hot.getSelected();
         var keyCodes = Handsontable.helper.KEY_CODES;
@@ -98,10 +101,10 @@
             case keyCodes.ARROW_DOWN:
                 //console.log(selection);
                 //hot.selectCell(selection[0], selection[1]);
-                var threshold = 15;
-                if (hot.isEmptyRow(selection[0] + threshold)) {
 
-                    //loadMoreData(visibleRows * 3);
+                if (hot.isEmptyRow(selection[0] + _instances[hotId].loadThreshold)) {
+                    _instances[hotId].offSet = rowCount;
+                    _loadMoreData(this, hotId, visibleRows * _instances[hotId].loadBufferToVisibleRows);
                 }
 
                 break;
@@ -111,27 +114,110 @@
 
     function _afterScrollVertically(e) {
         var hot = this;
+        var hotId = this.container.parentNode.id;
         var rowCount = hot.countRows();
         var rowOffset = hot.rowOffset();
         var visibleRows = hot.countVisibleRows();
 
-        console.log("rowCount :" + rowCount);
-        console.log("rowOffset :" + rowOffset);
-        console.log("visibleRows :" + visibleRows);
+        //console.log("rowCount :" + rowCount);
+        //console.log("rowOffset :" + rowOffset);
+        //console.log("visibleRows :" + visibleRows);
         var currSettings = hot.getSettings();
-        var currHeight = 0;
+        //var currHeight = 0;
         if (typeof currSettings.height === "function") {
-            currHeight = currSettings.height.call(hot);
-            var rowHeight = currHeight / visibleRows;
-
+            //currHeight = currSettings.height.call(hot);
+            //var rowHeight = currHeight / visibleRows;
+            //console.log("rowHeight :" + rowHeight);
         }
 
-        var lastRow = rowOffset + (visibleRows * 1);
+        // var lastRow = rowOffset + (visibleRows * 1);
         var lastVisibleRow = rowOffset + visibleRows + (visibleRows / 2);
-        var threshold = 15;
 
-        if (lastVisibleRow > (rowCount - threshold)) {
+        if (lastVisibleRow > (rowCount - _instances[hotId].loadThreshold)) {
             //loadMoreData(visibleRows * 3);
+            _instances[hotId].offSet = rowCount;
+            _loadMoreData(this, hotId, visibleRows * _instances[hotId].loadBufferToVisibleRows);
+        }
+    }
+
+    /**
+     * 
+     * @param {type} elem
+     * @returns {datamaize_handsontable_L68._getAncestorHeight.height}
+     */
+    function _getAncestorHeight(elem) {
+        var height = elem.height();
+        if (height <= 100) {
+            return _getAncestorHeight(elem.parent());
+        }
+
+        return height;
+    }
+
+    /**
+     * 
+     * @param {type} elem
+     * @returns {datamaize_handsontable_L68._getAncestorWidth.width}
+     */
+    function _getAncestorWidth(elem) {
+        var width = elem.width();
+        if (width <= 100) {
+            return _getAncestorWidth(elem.parent());
+        }
+
+        return width;
+    }
+
+    /***
+     * Used when we need to load more data on any event into the table
+     * @param {type} hot
+     * @param {type} id
+     * @param {type} numberOfRowsToLoad
+     * @returns {undefined}
+     */
+    function _loadMoreData(hot, id, numberOfRowsToLoad) {
+        if (_instances[id].loadingData) {
+            return;
+        }
+        _instances[id].loadingData = true;
+        _instances[id].numberOfRowsToLoad = numberOfRowsToLoad;
+        var dataNewPromise = _fetchHotData(id);
+        if (dataNewPromise === null) {
+            _instances[id].loadingData = false;
+            return;
+        }
+
+        $.when(dataNewPromise).then(function (incoming) {
+            incoming.forEach(function (d) {
+                _instances[id].options.data.push(d);
+            });
+            //hot.render();
+            var selection = hot.getSelected();
+            if (typeof selection !== "undefined") {
+                if (selection[0] > hot.rowOffset() + 10) {
+                    hot.selectCell(selection[0], selection[1]);
+                } else {
+                    hot.selectCell(hot.rowOffset() + 10, 1);
+                }
+
+            } else {
+                hot.selectCell(hot.rowOffset() + 10, 1);
+            }
+
+            _instances[id].loadingData = false;
+        });
+    }
+
+    /****
+     * 
+     * @param {type} id
+     * @returns {Array}
+     */
+    function _fetchHotData(id) {
+        if (typeof _instances[id].options.dataSource !== "undefined" && typeof _instances[id].options.dataSource === "function") {
+            return _instances[id].options.dataSource.call({}, _instances[id].offSet, _instances[id].pageNumber, _instances[id].rowsPerPage, _instances[id].numberOfRowsToLoad);
+        } else {
+            return _fetchData(id);
         }
     }
 
@@ -144,7 +230,13 @@
     function _buildHotTable(id, options) {
         _instances[id].hotObject = new Handsontable(document.getElementById(id), extend({
             afterScrollVertically: _afterScrollVertically,
-            beforeKeyDown: _beforeKeyDown
+            beforeKeyDown: _beforeKeyDown,
+            stretchH: "all",
+            height: function () {
+                return _getAncestorHeight($("#" + id)) - 30;
+            }, width: function () {
+                return _getAncestorWidth($("#" + id)) - 30;
+            }
         }, options));
 
     }
@@ -162,16 +254,16 @@
             return;
         }
         if (typeof _instances[id] === "undefined") {
-            _instances[id] = {};
+            _instances[id] = extend(_instances["default"], {});
             _instances[id].options = options;
             _instances[id].offSet = 0;
-
+            //_instances[id].data = [];
             var hotData = [];
             if (typeof _instances[id].options.dataSource !== "undefined" && typeof _instances[id].options.dataSource === "function") {
-                var hotDataPromise = _instances[id].options.dataSource.call({}, _instances[id].offSet, _instances[id].pageNumber, _instances[id].rowsPerPage);
+                var hotDataPromise = _instances[id].options.dataSource.call({}, _instances[id].offSet, _instances[id].pageNumber, _instances[id].rowsPerPage, _instances[id].numberOfRowsToLoad);
                 //$.when.apply($, hotDataPromise).then(
 
-                hotDataPromise.done(
+                $.when(hotDataPromise).then(
                         function (hotData) {
                             options.data = hotData;
                             _buildHotTable(id, options);
@@ -179,8 +271,7 @@
             } else {
 
                 //$.when.apply($, _fetchData(id)).then(
-                var hotDataPromise1 = _fetchData(id);
-                hotDataPromise1.done(function (respData) {
+                $.when(_fetchData(id)).then(function (respData) {
 
                     var dataProcessor = _instances[id].options.dataProcessor;
 
